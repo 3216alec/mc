@@ -4,14 +4,14 @@
  *
  * PHP 5
  *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <http://book.cakephp.org/view/1196/Testing>
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://book.cakephp.org/view/1196/Testing CakePHP(tm) Tests
  * @package       Cake.Test.Case.Model
  * @since         CakePHP(tm) v 1.2.0.4206
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -68,19 +68,20 @@ class ModelReadTest extends BaseModelTest {
 			)
 		);
 
+
 		$Something->JoinThing->create($joinThingData);
 		$Something->JoinThing->save();
 
 		$result = $Something->JoinThing->find('all', array('conditions' => array('something_else_id' => 2)));
 
-		$this->assertEquals(true, $result[0]['JoinThing']['doomed']);
-		$this->assertEquals(false, $result[1]['JoinThing']['doomed']);
+		$this->assertEquals($result[0]['JoinThing']['doomed'], true);
+		$this->assertEquals($result[1]['JoinThing']['doomed'], false);
 
 		$result = $Something->find('first');
 
-		$this->assertEquals(2, count($result['SomethingElse']));
+		$this->assertEquals(count($result['SomethingElse']), 2);
 
-		$doomed = Hash::extract($result['SomethingElse'], '{n}.JoinThing.doomed');
+		$doomed = Set::extract('/JoinThing/doomed', $result['SomethingElse']);
 		$this->assertTrue(in_array(true, $doomed));
 		$this->assertTrue(in_array(false, $doomed));
 	}
@@ -260,7 +261,7 @@ class ModelReadTest extends BaseModelTest {
 
 		$results = $Article->query($query);
 		$this->assertTrue(is_array($results));
-		$this->assertEquals(2, count($results));
+		$this->assertEquals(count($results), 2);
 
 		$query  = 'SELECT title, body FROM ';
 		$query .= $this->db->fullTableName('articles');
@@ -320,8 +321,8 @@ class ModelReadTest extends BaseModelTest {
 		$result = $Article->query($query, $params, false);
 		$this->assertTrue(is_array($result));
 		$this->assertTrue(
-			isset($result[0][$this->db->fullTableName('articles', false, false)]) ||
-			isset($result[0][0])
+			   isset($result[0][$this->db->fullTableName('articles', false, false)])
+			|| isset($result[0][0])
 		);
 		$result = $this->db->getQueryCache($query, $params);
 		$this->assertTrue(empty($result));
@@ -334,8 +335,8 @@ class ModelReadTest extends BaseModelTest {
 		$result = $Article->query($query, $params);
 		$this->assertTrue(is_array($result));
 		$this->assertTrue(
-			isset($result[0][$this->db->fullTableName('articles', false, false)]['title']) ||
-			isset($result[0][0]['title'])
+			   isset($result[0][$this->db->fullTableName('articles', false, false)]['title'])
+			|| isset($result[0][0]['title'])
 		);
 
 		//related to ticket #5035
@@ -346,6 +347,7 @@ class ModelReadTest extends BaseModelTest {
 
 		$result = $this->db->getQueryCache($query, $params);
 		$this->assertFalse($result === false);
+
 	}
 
 /**
@@ -3015,7 +3017,7 @@ class ModelReadTest extends BaseModelTest {
 		$this->loadFixtures('Apple', 'Sample');
 		$Apple = new Apple();
 		$result = $Apple->find('threaded');
-		$result = Hash::extract($result, '{n}.children');
+		$result = Set::extract($result, '{n}.children');
 		$expected = array(array(), array(), array(), array(), array(), array(),	array());
 		$this->assertEquals($expected, $result);
 	}
@@ -3030,7 +3032,7 @@ class ModelReadTest extends BaseModelTest {
 		$Model = new Person();
 		$Model->recursive = -1;
 		$result = $Model->find('threaded');
-		$result = Hash::extract($result, '{n}.children');
+		$result = Set::extract($result, '{n}.children');
 		$expected = array(array(), array(), array(), array(), array(), array(),	array());
 		$this->assertEquals($expected, $result);
 
@@ -3595,9 +3597,9 @@ class ModelReadTest extends BaseModelTest {
 		$result = $TestModel->find('neighbors', array('fields' => array('id')));
 
 		$this->assertNull($result['prev']);
-		$this->assertEquals(array('id' => 2), $result['next']['Article']);
-		$this->assertEquals(2, count($result['next']['Comment']));
-		$this->assertEquals(2, count($result['next']['Tag']));
+		$this->assertEquals($result['next']['Article'], array('id' => 2));
+		$this->assertEquals(count($result['next']['Comment']), 2);
+		$this->assertEquals(count($result['next']['Tag']), 2);
 
 		$TestModel->id = 2;
 		$TestModel->recursive = 0;
@@ -3621,9 +3623,9 @@ class ModelReadTest extends BaseModelTest {
 		$result = $TestModel->find('neighbors', array('fields' => array('id')));
 
 		$this->assertNull($result['next']);
-		$this->assertEquals(array('id' => 2), $result['prev']['Article']);
-		$this->assertEquals(2, count($result['prev']['Comment']));
-		$this->assertEquals(2, count($result['prev']['Tag']));
+		$this->assertEquals($result['prev']['Article'], array('id' => 2));
+		$this->assertEquals(count($result['prev']['Comment']), 2);
+		$this->assertEquals(count($result['prev']['Tag']), 2);
 
 		$TestModel->id = 1;
 		$result = $TestModel->find('neighbors', array('recursive' => -1));
@@ -4266,7 +4268,7 @@ class ModelReadTest extends BaseModelTest {
 
 		$TestModel->resetAssociations();
 		$result = $TestModel->hasMany;
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 
 		$result = $TestModel->bindModel(array('hasMany' => array('Comment')), false);
 		$this->assertTrue($result);
@@ -4583,7 +4585,7 @@ class ModelReadTest extends BaseModelTest {
 			'order' => '',
 			'counterCache' => ''
 		);
-		$this->assertEquals($expected, $TestModel2->belongsTo['FeatureSet']);
+		$this->assertEquals($TestModel2->belongsTo['FeatureSet'], $expected);
 
 		$TestModel2->bindModel(array(
 			'belongsTo' => array(
@@ -4594,7 +4596,7 @@ class ModelReadTest extends BaseModelTest {
 			)
 		));
 		$expected['conditions'] = array('active' => true);
-		$this->assertEquals($expected, $TestModel2->belongsTo['FeatureSet']);
+		$this->assertEquals($TestModel2->belongsTo['FeatureSet'], $expected);
 
 		$TestModel2->bindModel(array(
 			'belongsTo' => array(
@@ -4607,7 +4609,7 @@ class ModelReadTest extends BaseModelTest {
 		));
 		$expected['conditions'] = array('Feature.name' => 'DeviceType.name');
 		$expected['foreignKey'] = false;
-		$this->assertEquals($expected, $TestModel2->belongsTo['FeatureSet']);
+		$this->assertEquals($TestModel2->belongsTo['FeatureSet'], $expected);
 
 		$TestModel2->bindModel(array(
 			'hasMany' => array(
@@ -4631,7 +4633,7 @@ class ModelReadTest extends BaseModelTest {
 			'finderQuery' => '',
 			'counterQuery' => ''
 		);
-		$this->assertEquals($expected, $TestModel2->hasMany['NewFeatureSet']);
+		$this->assertEquals($TestModel2->hasMany['NewFeatureSet'], $expected);
 		$this->assertTrue(is_object($TestModel2->NewFeatureSet));
 	}
 
@@ -5016,40 +5018,7 @@ class ModelReadTest extends BaseModelTest {
 			'updated' => '2007-03-18 10:47:31',
 			'callback' => 'Fire'
 		);
-		$this->assertEquals($expected, $result[0]['Post'][0]['Comment'][0]);
-	}
-
-/**
- * testDeeperAssociationAfterFind method
- *
- * @return void
- */
-	public function testDeeperAssociationAfterFind() {
-		$this->loadFixtures('Post', 'Author', 'Comment', 'Attachment', 'Article');
-
-		$Post = new Post();
-		$Post->bindModel(array(
-			'hasMany' => array(
-				'Comment' => array(
-					'className' => 'ModifiedComment',
-					'foreignKey' => 'article_id',
-				)
-		)));
-		$Post->Comment->bindModel(array(
-			'hasOne' => array(
-				'Attachment' => array(
-					'className' => 'ModifiedAttachment',
-				)
-		)));
-
-		$result = $Post->find('first', array(
-			'conditions' => array('Post.id' => 2),
-			'recursive' => 2
-		));
-		$this->assertTrue(isset($result['Comment'][0]['callback']));
-		$this->assertEquals('Fire', $result['Comment'][0]['callback']);
-		$this->assertTrue(isset($result['Comment'][0]['Attachment']['callback']));
-		$this->assertEquals('Fired', $result['Comment'][0]['Attachment']['callback']);
+		$this->assertEquals($result[0]['Post'][0]['Comment'][0], $expected);
 	}
 
 /**
@@ -5061,19 +5030,19 @@ class ModelReadTest extends BaseModelTest {
 		$this->loadFixtures('Author');
 		$TestModel = new ModifiedAuthor();
 
-		$result = Hash::extract($TestModel->find('all'), '{n}.Author.user');
+		$result = Set::extract($TestModel->find('all'), '/Author/user');
 		$expected = array('mariano (CakePHP)', 'nate (CakePHP)', 'larry (CakePHP)', 'garrett (CakePHP)');
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::extract($TestModel->find('all', array('callbacks' => 'after')), '{n}.Author.user');
+		$result = Set::extract($TestModel->find('all', array('callbacks' => 'after')), '/Author/user');
 		$expected = array('mariano (CakePHP)', 'nate (CakePHP)', 'larry (CakePHP)', 'garrett (CakePHP)');
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::extract($TestModel->find('all', array('callbacks' => 'before')), '{n}.Author.user');
+		$result = Set::extract($TestModel->find('all', array('callbacks' => 'before')), '/Author/user');
 		$expected = array('mariano', 'nate', 'larry', 'garrett');
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::extract($TestModel->find('all', array('callbacks' => false)), '{n}.Author.user');
+		$result = Set::extract($TestModel->find('all', array('callbacks' => false)), '/Author/user');
 		$expected = array('mariano', 'nate', 'larry', 'garrett');
 		$this->assertEquals($expected, $result);
 	}
@@ -5164,7 +5133,7 @@ class ModelReadTest extends BaseModelTest {
 			'created' => '2007-03-18 10:45:23',
 			'updated' => '2007-03-18 10:47:31'
 		);
-		$this->assertEquals($expected, $result[0]['Post'][0]['Comment'][0]);
+		$this->assertEquals($result[0]['Post'][0]['Comment'][0], $expected);
 	}
 
 /**
@@ -5492,7 +5461,7 @@ class ModelReadTest extends BaseModelTest {
 				'tag' => 'tag2'
 		));
 
-		$this->assertEquals($expected, $result['Tag']);
+		$this->assertEquals($result['Tag'], $expected);
 	}
 
 /**
@@ -6230,20 +6199,17 @@ class ModelReadTest extends BaseModelTest {
 
 		$expected = array(
 			'conditions' => array(
-				'user' => 'larry'
-			),
-			'fields' => null,
+				'user' => 'larry'),
+			'fields' => NULL,
 			'joins' => array(),
-			'limit' => null,
-			'offset' => null,
+			'limit' => NULL,
+			'offset' => NULL,
 			'order' => array(
-				0 => null
-			),
+				0 => NULL),
 			'page' => 1,
-			'group' => null,
+			'group' => NULL,
 			'callbacks' => true,
-			'returnQuery' => true
-		);
+			'returnQuery' => true);
 		$result = $TestModel->buildQuery('all', array('returnQuery' => true, 'conditions' => array('user' => 'larry')));
 		$this->assertEquals($expected, $result);
 	}
@@ -6512,7 +6478,7 @@ class ModelReadTest extends BaseModelTest {
 			$this->assertEquals($expected, $result);
 		}
 
-		$result = Hash::combine(
+		$result = Set::combine(
 			$TestModel->find('all', array(
 				'order' => 'Article.title ASC',
 				'fields' => array('id', 'title')
@@ -6526,7 +6492,7 @@ class ModelReadTest extends BaseModelTest {
 		);
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::combine(
+		$result = Set::combine(
 			$TestModel->find('all', array(
 				'order' => 'Article.title ASC'
 			)),
@@ -6563,7 +6529,7 @@ class ModelReadTest extends BaseModelTest {
 
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::combine(
+		$result = Set::combine(
 			$TestModel->find('all', array(
 				'order' => 'Article.title ASC'
 			)),
@@ -6602,7 +6568,7 @@ class ModelReadTest extends BaseModelTest {
 
 		$this->assertEquals($expected, $result);
 
-		$result = Hash::combine(
+		$result = Set::combine(
 			$TestModel->find('all', array(
 				'order' => 'Article.title ASC',
 				'fields' => array('id', 'title', 'user_id')
@@ -6631,8 +6597,8 @@ class ModelReadTest extends BaseModelTest {
 			7 => 'Some odd color'
 		);
 
-		$this->assertEquals($expected, $TestModel->find('list'));
-		$this->assertEquals($expected, $TestModel->Parent->find('list'));
+		$this->assertEquals($TestModel->find('list'), $expected);
+		$this->assertEquals($TestModel->Parent->find('list'), $expected);
 
 		$TestModel = new Post();
 		$result = $TestModel->find('list', array(
@@ -6763,22 +6729,22 @@ class ModelReadTest extends BaseModelTest {
 
 		$TestModel->id = 1;
 		$result = $TestModel->field('user');
-		$this->assertEquals('mariano', $result);
+		$this->assertEquals($result, 'mariano');
 
 		$result = $TestModel->field('User.user');
-		$this->assertEquals('mariano', $result);
+		$this->assertEquals($result, 'mariano');
 
 		$TestModel->id = false;
 		$result = $TestModel->field('user', array(
 			'user' => 'mariano'
 		));
-		$this->assertEquals('mariano', $result);
+		$this->assertEquals($result, 'mariano');
 
 		$result = $TestModel->field('COUNT(*) AS count', true);
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 
 		$result = $TestModel->field('COUNT(*)', true);
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 	}
 
 /**
@@ -6814,7 +6780,7 @@ class ModelReadTest extends BaseModelTest {
 		$TestModel = new User();
 		$this->db->getLog(false, true);
 		$result = $TestModel->find('count');
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 
 		$this->db->getLog(false, true);
 		$fullDebug = $this->db->fullDebug;
@@ -6822,7 +6788,7 @@ class ModelReadTest extends BaseModelTest {
 		$TestModel->order = 'User.id';
 		$result = $TestModel->find('count');
 		$this->db->fullDebug = $fullDebug;
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 
 		$log = $this->db->getLog();
 		$this->assertTrue(isset($log['log'][0]['query']));
@@ -6850,7 +6816,7 @@ class ModelReadTest extends BaseModelTest {
 		$Project->id = 3;
 		$result = $Project->find('first');
 
-		$this->assertEquals('Project 1', $result['Project']['name'], 'Wrong record retrieved');
+		$this->assertEquals($result['Project']['name'], 'Project 1', 'Wrong record retrieved');
 	}
 
 /**
@@ -6869,7 +6835,7 @@ class ModelReadTest extends BaseModelTest {
 		$TestModel->create(array('name' => 'project')) && $TestModel->save();
 
 		$result = $TestModel->find('count', array('fields' => 'DISTINCT name'));
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 	}
 
 /**
@@ -6887,12 +6853,12 @@ class ModelReadTest extends BaseModelTest {
 		$result = $TestModel->find('count', array('conditions' => array(
 			$db->expression('Project.name = \'Project 3\'')
 		)));
-		$this->assertEquals(1, $result);
+		$this->assertEquals($result, 1);
 
 		$result = $TestModel->find('count', array('conditions' => array(
 			'Project.name' => $db->expression('\'Project 3\'')
 		)));
-		$this->assertEquals(1, $result);
+		$this->assertEquals($result, 1);
 	}
 
 /**
@@ -7606,9 +7572,9 @@ class ModelReadTest extends BaseModelTest {
 		$this->loadFixtures('Comment');
 		$Comment = new AgainModifiedComment();
 		$comments = $Comment->find('all');
-		$this->assertEquals('all', $comments[0]['Comment']['querytype']);
+		$this->assertEquals($comments[0]['Comment']['querytype'], 'all');
 		$comments = $Comment->find('first');
-		$this->assertEquals('first', $comments['Comment']['querytype']);
+		$this->assertEquals($comments['Comment']['querytype'], 'first');
 	}
 
 /**
@@ -7624,13 +7590,13 @@ class ModelReadTest extends BaseModelTest {
 		$Post = ClassRegistry::init('Post');
 		$Post->virtualFields = array('two' => "1 + 1");
 		$result = $Post->find('first');
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 
 		// SQL Server does not support operators in expressions
 		if (!($this->db instanceof Sqlserver)) {
 			$Post->Author->virtualFields = array('false' => '1 = 2');
 			$result = $Post->find('first');
-			$this->assertEquals(2, $result['Post']['two']);
+			$this->assertEquals($result['Post']['two'], 2);
 			$this->assertFalse((bool)$result['Author']['false']);
 		}
 
@@ -7639,33 +7605,33 @@ class ModelReadTest extends BaseModelTest {
 		$this->assertFalse(isset($result['Author']['false']));
 
 		$result = $Post->find('first',array('fields' => array('author_id', 'two')));
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 		$this->assertFalse(isset($result['Author']['false']));
 
 		$result = $Post->find('first',array('fields' => array('two')));
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 
 		$Post->id = 1;
 		$result = $Post->field('two');
-		$this->assertEquals(2, $result);
+		$this->assertEquals($result, 2);
 
 		$result = $Post->find('first',array(
 			'conditions' => array('two' => 2),
 			'limit' => 1
 		));
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 
 		$result = $Post->find('first',array(
 			'conditions' => array('two <' => 3),
 			'limit' => 1
 		));
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 
 		$result = $Post->find('first',array(
 			'conditions' => array('NOT' => array('two >' => 3)),
 			'limit' => 1
 		));
-		$this->assertEquals(2, $result['Post']['two']);
+		$this->assertEquals($result['Post']['two'], 2);
 
 		$dbo = $Post->getDataSource();
 		$Post->virtualFields = array('other_field' => 'Post.id + 1');
@@ -7673,24 +7639,24 @@ class ModelReadTest extends BaseModelTest {
 			'conditions' => array('other_field' => 3),
 			'limit' => 1
 		));
-		$this->assertEquals(2, $result['Post']['id']);
+		$this->assertEquals($result['Post']['id'], 2);
 
 		$Post->virtualFields = array('other_field' => 'Post.id + 1');
 		$result = $Post->find('all', array(
 			'fields' => array($dbo->calculate($Post, 'max', array('other_field')))
 		));
-		$this->assertEquals(4, $result[0][0]['other_field']);
+		$this->assertEquals($result[0][0]['other_field'], 4);
 
 		ClassRegistry::flush();
 		$Writing = ClassRegistry::init(array('class' => 'Post', 'alias' => 'Writing'), 'Model');
 		$Writing->virtualFields = array('two' => "1 + 1");
 		$result = $Writing->find('first');
-		$this->assertEquals(2, $result['Writing']['two']);
+		$this->assertEquals($result['Writing']['two'], 2);
 
 		$Post->create();
 		$Post->virtualFields = array('other_field' => 'COUNT(Post.id) + 1');
 		$result = $Post->field('other_field');
-		$this->assertEquals(4, $result);
+		$this->assertEquals($result, 4);
 	}
 
 /**
@@ -7722,17 +7688,17 @@ class ModelReadTest extends BaseModelTest {
 
 		$Post->Author->virtualFields = array('joined' => 'Post.id * Author.id');
 		$result = $Post->find('all');
-		$result = Hash::extract($result, '{n}.Author.joined');
+		$result = Set::extract('{n}.Author.joined', $result);
 		$expected = array(1, 6, 3);
 		$this->assertEquals($expected, $result);
 
 		$result = $Post->find('all', array('order' => array('Author.joined' => 'ASC')));
-		$result = Hash::extract($result, '{n}.Author.joined');
+		$result = Set::extract('{n}.Author.joined', $result);
 		$expected = array(1, 3, 6);
 		$this->assertEquals($expected, $result);
 
 		$result = $Post->find('all', array('order' => array('Author.joined' => 'DESC')));
-		$result = Hash::extract($result, '{n}.Author.joined');
+		$result = Set::extract('{n}.Author.joined', $result);
 		$expected = array(6, 3, 1);
 		$this->assertEquals($expected, $result);
 	}
@@ -7768,7 +7734,8 @@ class ModelReadTest extends BaseModelTest {
 			'group' => array('low_title')
 		));
 
-		$this->assertEquals($expectation, $result);
+		$this->assertEquals($result, $expectation);
+
 
 		$Author = ClassRegistry::init('Author');
 		$Author->virtualFields = array(
@@ -7837,6 +7804,7 @@ class ModelReadTest extends BaseModelTest {
 		$this->assertEquals($Post->getVirtualField('Post.other_field'), $Post->virtualFields['other_field']);
 	}
 
+
 /**
  * test that checks for error when NOT condition passed in key and a 1 element array value
  *
@@ -7855,8 +7823,9 @@ class ModelReadTest extends BaseModelTest {
 				)
 			)
 		);
+
 		$this->assertTrue(is_array($result) && !empty($result));
-	}
+    }
 
 /**
  * test custom find method
@@ -7868,7 +7837,7 @@ class ModelReadTest extends BaseModelTest {
 		$Article = new CustomArticle();
 		$data = array('user_id' => 3, 'title' => 'Fourth Article', 'body' => 'Article Body, unpublished', 'published' => 'N');
 		$Article->create($data);
-		$Article->save(null, false);
+		$Article->save();
 		$this->assertEquals(4, $Article->id);
 
 		$result = $Article->find('published');
@@ -7876,6 +7845,5 @@ class ModelReadTest extends BaseModelTest {
 
 		$result = $Article->find('unPublished');
 		$this->assertEquals(1, count($result));
-	}
-
+    }
 }

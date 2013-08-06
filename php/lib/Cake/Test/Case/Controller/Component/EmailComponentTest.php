@@ -6,14 +6,14 @@
  *
  * PHP 5
  *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <http://book.cakephp.org/view/1196/Testing>
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://book.cakephp.org/view/1196/Testing CakePHP(tm) Tests
  * @package       Cake.Test.Case.Controller.Component
  * @since         CakePHP(tm) v 1.2.0.5347
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -148,19 +148,31 @@ class EmailComponentTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
-		parent::setUp();
-
+		$this->_appEncoding = Configure::read('App.encoding');
 		Configure::write('App.encoding', 'UTF-8');
 
 		$this->Controller = new EmailTestController();
+
 		$this->Controller->Components->init($this->Controller);
+
 		$this->Controller->EmailTest->initialize($this->Controller, array());
 
 		self::$sentDate = date(DATE_RFC2822);
 
 		App::build(array(
-			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS)
+			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View'. DS)
 		));
+	}
+
+/**
+ * tearDown method
+ *
+ * @return void
+ */
+	public function tearDown() {
+		Configure::write('App.encoding', $this->_appEncoding);
+		App::build();
+		ClassRegistry::flush();
 	}
 
 /**
@@ -289,10 +301,10 @@ HTMLBLOC;
 			"\n\n" .
 			'--alt-{boundary}' . "\n" .
 			'Content-Type: text/html; charset=UTF-8' . "\n" .
-			'Content-Transfer-Encoding: 8bit' . "\n\n" .
+			'Content-Transfer-Encoding: 8bit' . "\n\n" . 
 			$html .
-			"\n\n" .
-			'--alt-{boundary}--' . "\n\n\n" .
+			"\n\n" . 
+			'--alt-{boundary}--' . "\n\n\n" . 
 			'--{boundary}--' . "\n";
 
 		$expect = '<pre>' . $expect . '</pre>';
@@ -417,7 +429,7 @@ HTMLBLOC;
  */
 	public function testMessageRetrievalWithoutTemplate() {
 		App::build(array(
-			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS)
+			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View'. DS)
 		));
 
 		$this->Controller->EmailTest->to = 'postmaster@example.com';
@@ -454,7 +466,7 @@ HTMLBLOC;
  */
 	public function testMessageRetrievalWithTemplate() {
 		App::build(array(
-			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS)
+			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View'. DS)
 		));
 
 		$this->Controller->set('value', 22091985);
@@ -514,7 +526,7 @@ HTMLBLOC;
  */
 	public function testMessageRetrievalWithHelper() {
 		App::build(array(
-			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS)
+			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View'. DS)
 		));
 
 		$timestamp = time();
@@ -612,7 +624,7 @@ HTMLBLOC;
  *
  * @return void
  */
-	public function testEncodeSettingInternalCharset() {
+	public function test_encodeSettingInternalCharset() {
 		$this->skipIf(!function_exists('mb_internal_encoding'), 'Missing mb_* functions, cannot run test.');
 
 		$restore = mb_internal_encoding();
@@ -635,7 +647,7 @@ HTMLBLOC;
 		$this->assertEquals(trim($matches[1]), $subject);
 
 		$result = mb_internal_encoding();
-		$this->assertEquals('ISO-8859-1', $result);
+		$this->assertEquals($result, 'ISO-8859-1');
 
 		mb_internal_encoding($restore);
 	}
@@ -808,7 +820,7 @@ HTMLBLOC;
 	public function testPluginCustomViewClass() {
 		App::build(array(
 			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS),
-			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS)
+			'View' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'View'. DS)
 		));
 
 		$this->Controller->view = 'TestPlugin.Email';
@@ -823,6 +835,7 @@ HTMLBLOC;
 		$result = DebugCompTransport::$lastEmail;
 
 		$this->assertRegExp('/Body of message/', $result);
+
 	}
 
 /**
@@ -850,8 +863,7 @@ HTMLBLOC;
 		$this->assertTrue($this->Controller->EmailTest->send('This is the body of the message'));
 		$result = DebugCompTransport::$lastEmail;
 
-		$host = env('HTTP_HOST') ? env('HTTP_HOST') : php_uname('n');
-		$this->assertRegExp('/Message-ID: \<[a-f0-9]{8}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{12}@' . $host . '\>\n/', $result);
+		$this->assertRegExp('/Message-ID: \<[a-f0-9]{8}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{12}@' . env('HTTP_HOST') . '\>\n/', $result);
 
 		$this->Controller->EmailTest->messageId = '<22091985.998877@example.com>';
 
@@ -866,24 +878,6 @@ HTMLBLOC;
 		$result = DebugCompTransport::$lastEmail;
 
 		$this->assertNotRegExp('/Message-ID:/', $result);
-	}
-
-/**
- * Make sure from/to are not double encoded when UTF-8 is present
- */
-	public function testEncodingFrom() {
-		$this->Controller->EmailTest->to = 'Teßt <test@example.com>';
-		$this->Controller->EmailTest->from = 'Teßt <test@example.com>';
-		$this->Controller->EmailTest->subject = 'Cake Debug Test';
-		$this->Controller->EmailTest->replyTo = 'noreply@example.com';
-		$this->Controller->EmailTest->template = null;
-
-		$this->Controller->EmailTest->delivery = 'DebugComp';
-		$this->assertTrue($this->Controller->EmailTest->send('This is the body of the message'));
-		$result = DebugCompTransport::$lastEmail;
-
-		$this->assertContains('From: =?UTF-8?B?VGXDn3Qg?= <test@example.com>', $result);
-		$this->assertContains('To: =?UTF-8?B?VGXDn3Qg?= <test@example.com>', $result);
 	}
 
 }

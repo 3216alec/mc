@@ -4,14 +4,14 @@
  *
  * PHP 5
  *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <http://book.cakephp.org/view/1196/Testing>
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://book.cakephp.org/view/1196/Testing CakePHP(tm) Tests
  * @package       Cake.Test.Case.TestSuite
  * @since         CakePHP(tm) v 1.2.0.4667
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -155,23 +155,15 @@ class CakeTestFixtureDefaultImportFixture extends CakeTestFixture {
  * @package       Cake.Test.Case.TestSuite
  */
 class FixtureImportTestModel extends Model {
-
 	public $name = 'FixtureImport';
-
 	public $useTable = 'fixture_tests';
-
 	public $useDbConfig = 'test';
-
 }
 
 class FixturePrefixTest extends Model {
-
 	public $name = 'FixturePrefix';
-
 	public $useTable = '_tests';
-
 	public $tablePrefix = 'fixture';
-
 	public $useDbConfig = 'test';
 }
 
@@ -217,18 +209,18 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Fixture = new CakeTestFixtureTestFixture();
 		unset($Fixture->table);
 		$Fixture->init();
-		$this->assertEquals('fixture_tests', $Fixture->table);
-		$this->assertEquals('id', $Fixture->primaryKey);
+		$this->assertEquals($Fixture->table, 'fixture_tests');
+		$this->assertEquals($Fixture->primaryKey, 'id');
 
 		$Fixture = new CakeTestFixtureTestFixture();
 		$Fixture->primaryKey = 'my_random_key';
 		$Fixture->init();
-		$this->assertEquals('my_random_key', $Fixture->primaryKey);
+		$this->assertEquals($Fixture->primaryKey, 'my_random_key');
 	}
 
+
 /**
- * test that init() correctly sets the fixture table when the connection 
- * or model have prefixes defined.
+ * test that init() correctly sets the fixture table when the connection or model have prefixes defined.
  *
  * @return void
  */
@@ -242,7 +234,7 @@ class CakeTestFixtureTest extends CakeTestCase {
 
 		$Fixture = new CakeTestFixtureTestFixture();
 		$expected = array('id', 'name', 'created');
-		$this->assertEquals($expected, array_keys($Fixture->fields));
+		$this->assertEquals(array_keys($Fixture->fields), $expected);
 
 		$config = $db->config;
 		$config['prefix'] = 'fixture_test_suite_';
@@ -258,8 +250,8 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Fixture->fields = $Fixture->records = $Fixture->table = null;
 		$Fixture->import = array('model' => 'FixtureImportTestModel', 'connection' => 'test');
 		$Fixture->init();
-		$this->assertEquals(array('id', 'name', 'created'), array_keys($Fixture->fields));
-		$this->assertEquals('fixture_tests', $Fixture->table);
+		$this->assertEquals(array_keys($Fixture->fields), array('id', 'name', 'created'));
+		$this->assertEquals($Fixture->table, 'fixture_tests');
 
 		$keys = array_flip(ClassRegistry::keys());
 		$this->assertFalse(array_key_exists('fixtureimporttestmodel', $keys));
@@ -291,8 +283,8 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Fixture->import = array('model' => 'FixtureImportTestModel', 'connection' => 'test');
 
 		$Fixture->init();
-		$this->assertEquals(array('id', 'name', 'created'), array_keys($Fixture->fields));
-		$this->assertEquals('fixture_tests', $Fixture->table);
+		$this->assertEquals(array_keys($Fixture->fields), array('id', 'name', 'created'));
+		$this->assertEquals($Fixture->table, 'fixture_tests');
 
 		$Source->drop($db);
 		$db->config['prefix'] = $backPrefix;
@@ -316,7 +308,7 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Fixture->fields = $Fixture->records = null;
 		$Fixture->import = array('model' => 'FixturePrefixTest', 'connection' => 'test', 'records' => false);
 		$Fixture->init();
-		$this->assertEquals('fixture_tests', $Fixture->table);
+		$this->assertEquals($Fixture->table, 'fixture_tests');
 
 		$keys = array_flip(ClassRegistry::keys());
 		$this->assertFalse(array_key_exists('fixtureimporttestmodel', $keys));
@@ -343,7 +335,7 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Fixture->fields = $Fixture->records = null;
 		$Fixture->import = array('model' => 'FixtureImportTestModel', 'connection' => 'new_test_suite');
 		$Fixture->init();
-		$this->assertEquals(array('id', 'name', 'created'), array_keys($Fixture->fields));
+		$this->assertEquals(array_keys($Fixture->fields), array('id', 'name', 'created'));
 
 		$keys = array_flip(ClassRegistry::keys());
 		$this->assertFalse(array_key_exists('fixtureimporttestmodel', $keys));
@@ -367,13 +359,14 @@ class CakeTestFixtureTest extends CakeTestCase {
 		$Source->create($newTestSuiteDb);
 		$Source->insert($newTestSuiteDb);
 
+
 		$Fixture = new CakeTestFixtureDefaultImportFixture();
 		$Fixture->fields = $Fixture->records = null;
 		$Fixture->import = array(
 			'model' => 'FixtureImportTestModel', 'connection' => 'new_test_suite', 'records' => true
 		);
 		$Fixture->init();
-		$this->assertEquals(array('id', 'name', 'created'), array_keys($Fixture->fields));
+		$this->assertEquals(array_keys($Fixture->fields), array('id', 'name', 'created'));
 		$this->assertFalse(empty($Fixture->records[0]), 'No records loaded on importing fixture.');
 		$this->assertTrue(isset($Fixture->records[0]['name']), 'No name loaded for first record');
 

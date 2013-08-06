@@ -5,12 +5,12 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Controller.Component
  * @since         CakePHP(tm) v 1.2.0.4213
@@ -19,7 +19,6 @@
 
 App::uses('Component', 'Controller');
 App::uses('Security', 'Utility');
-App::uses('Hash', 'Utility');
 
 /**
  * Cookie Component.
@@ -130,10 +129,11 @@ class CookieComponent extends Component {
 /**
  * Type of encryption to use.
  *
- * Currently two methods are available: cipher and rijndael
+ * Currently only one method is available
  * Defaults to Security::cipher();
  *
  * @var string
+ * @todo add additional encryption methods
  */
 	protected $_type = 'cipher';
 
@@ -190,9 +190,8 @@ class CookieComponent extends Component {
 	public function startup(Controller $controller) {
 		$this->_expire($this->time);
 
-		$this->_values[$this->name] = array();
 		if (isset($_COOKIE[$this->name])) {
-			$this->_values[$this->name] = $this->_decrypt($_COOKIE[$this->name]);
+			$this->_values = $this->_decrypt($_COOKIE[$this->name]);
 		}
 	}
 
@@ -208,18 +207,14 @@ class CookieComponent extends Component {
  * You must use this method before any output is sent to the browser.
  * Failure to do so will result in header already sent errors.
  *
- * @param string|array $key Key for the value
+ * @param mixed $key Key for the value
  * @param mixed $value Value
  * @param boolean $encrypt Set to true to encrypt value, false otherwise
- * @param integer|string $expires Can be either Unix timestamp, or date string
+ * @param string $expires Can be either Unix timestamp, or date string
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-libraries/components/cookie.html#CookieComponent::write
  */
 	public function write($key, $value = null, $encrypt = true, $expires = null) {
-		if (empty($this->_values[$this->name])) {
-			$this->read();
-		}
-
 		if (is_null($encrypt)) {
 			$encrypt = true;
 		}
@@ -232,14 +227,14 @@ class CookieComponent extends Component {
 
 		foreach ($key as $name => $value) {
 			if (strpos($name, '.') === false) {
-				$this->_values[$this->name][$name] = $value;
+				$this->_values[$name] = $value;
 				$this->_write("[$name]", $value);
 			} else {
 				$names = explode('.', $name, 2);
-				if (!isset($this->_values[$this->name][$names[0]])) {
-					$this->_values[$this->name][$names[0]] = array();
+				if (!isset($this->_values[$names[0]])) {
+					$this->_values[$names[0]] = array();
 				}
-				$this->_values[$this->name][$names[0]] = Hash::insert($this->_values[$this->name][$names[0]], $names[1], $value);
+				$this->_values[$names[0]] = Set::insert($this->_values[$names[0]], $names[1], $value);
 				$this->_write('[' . implode('][', $names) . ']', $value);
 			}
 		}
@@ -252,33 +247,31 @@ class CookieComponent extends Component {
  * Optional [Name.], required key
  * $this->Cookie->read(Name.key);
  *
- * @param string $key Key of the value to be obtained. If none specified, obtain map key => values
+ * @param mixed $key Key of the value to be obtained. If none specified, obtain map key => values
  * @return string or null, value for specified key
  * @link http://book.cakephp.org/2.0/en/core-libraries/components/cookie.html#CookieComponent::read
  */
 	public function read($key = null) {
-		if (empty($this->_values[$this->name]) && isset($_COOKIE[$this->name])) {
-			$this->_values[$this->name] = $this->_decrypt($_COOKIE[$this->name]);
+		if (empty($this->_values) && isset($_COOKIE[$this->name])) {
+			$this->_values = $this->_decrypt($_COOKIE[$this->name]);
 		}
-		if (empty($this->_values[$this->name])) {
-			$this->_values[$this->name] = array();
-		}
+
 		if (is_null($key)) {
-			return $this->_values[$this->name];
+			return $this->_values;
 		}
 
 		if (strpos($key, '.') !== false) {
 			$names = explode('.', $key, 2);
 			$key = $names[0];
 		}
-		if (!isset($this->_values[$this->name][$key])) {
+		if (!isset($this->_values[$key])) {
 			return null;
 		}
 
 		if (!empty($names[1])) {
-			return Hash::get($this->_values[$this->name][$key], $names[1]);
+			return Set::extract($this->_values[$key], $names[1]);
 		}
-		return $this->_values[$this->name][$key];
+		return $this->_values[$key];
 	}
 
 /**
@@ -295,22 +288,22 @@ class CookieComponent extends Component {
  * @link http://book.cakephp.org/2.0/en/core-libraries/components/cookie.html#CookieComponent::delete
  */
 	public function delete($key) {
-		if (empty($this->_values[$this->name])) {
+		if (empty($this->_values)) {
 			$this->read();
 		}
 		if (strpos($key, '.') === false) {
-			if (isset($this->_values[$this->name][$key]) && is_array($this->_values[$this->name][$key])) {
-				foreach ($this->_values[$this->name][$key] as $idx => $val) {
+			if (isset($this->_values[$key]) && is_array($this->_values[$key])) {
+				foreach ($this->_values[$key] as $idx => $val) {
 					$this->_delete("[$key][$idx]");
 				}
 			}
 			$this->_delete("[$key]");
-			unset($this->_values[$this->name][$key]);
+			unset($this->_values[$key]);
 			return;
 		}
 		$names = explode('.', $key, 2);
-		if (isset($this->_values[$this->name][$names[0]])) {
-			$this->_values[$this->name][$names[0]] = Hash::remove($this->_values[$this->name][$names[0]], $names[1]);
+		if (isset($this->_values[$names[0]])) {
+			$this->_values[$names[0]] = Set::remove($this->_values[$names[0]], $names[1]);
 		}
 		$this->_delete('[' . implode('][', $names) . ']');
 	}
@@ -326,39 +319,30 @@ class CookieComponent extends Component {
  */
 	public function destroy() {
 		if (isset($_COOKIE[$this->name])) {
-			$this->_values[$this->name] = $this->_decrypt($_COOKIE[$this->name]);
+			$this->_values = $this->_decrypt($_COOKIE[$this->name]);
 		}
 
-		foreach ($this->_values[$this->name] as $name => $value) {
+		foreach ($this->_values as $name => $value) {
 			if (is_array($value)) {
 				foreach ($value as $key => $val) {
-					unset($this->_values[$this->name][$name][$key]);
+					unset($this->_values[$name][$key]);
 					$this->_delete("[$name][$key]");
 				}
 			}
-			unset($this->_values[$this->name][$name]);
+			unset($this->_values[$name]);
 			$this->_delete("[$name]");
 		}
 	}
 
 /**
- * Will allow overriding default encryption method. Use this method
- * in ex: AppController::beforeFilter() before you have read or
- * written any cookies.
+ * Will allow overriding default encryption method.
  *
  * @param string $type Encryption method
  * @return void
+ * @todo NOT IMPLEMENTED
  */
 	public function type($type = 'cipher') {
-		$availableTypes = array(
-			'cipher',
-			'rijndael'
-		);
-		if (!in_array($type, $availableTypes)) {
-			trigger_error(__d('cake_dev', 'You must use cipher or rijndael for cookie encryption type'), E_USER_WARNING);
-			$type = 'cipher';
-		}
-		$this->_type = $type;
+		$this->_type = 'cipher';
 	}
 
 /**
@@ -371,7 +355,7 @@ class CookieComponent extends Component {
  * CookieComponent::write(string, string, boolean, 8400);
  * CookieComponent::write(string, string, boolean, '5 Days');
  *
- * @param integer|string $expires Can be either Unix timestamp, or date string
+ * @param mixed $expires Can be either Unix timestamp, or date string
  * @return integer Unix timestamp
  */
 	protected function _expire($expires = null) {
@@ -447,7 +431,7 @@ class CookieComponent extends Component {
 
 		if ($this->_encrypted === true) {
 			$type = $this->_type;
-			$value = "Q2FrZQ==." . base64_encode(Security::$type($value, $this->key, 'encrypt'));
+			$value = "Q2FrZQ==." . base64_encode(Security::$type($value, $this->key));
 		}
 		return $value;
 	}
@@ -470,7 +454,7 @@ class CookieComponent extends Component {
 
 					if ($pos !== false) {
 						$val = substr($val, 8);
-						$decrypted[$name][$key] = $this->_explode(Security::$type(base64_decode($val), $this->key, 'decrypt'));
+						$decrypted[$name][$key] = $this->_explode(Security::$type(base64_decode($val), $this->key));
 					}
 				}
 			} else {
@@ -479,7 +463,7 @@ class CookieComponent extends Component {
 
 				if ($pos !== false) {
 					$value = substr($value, 8);
-					$decrypted[$name] = $this->_explode(Security::$type(base64_decode($value), $this->key, 'decrypt'));
+					$decrypted[$name] = $this->_explode(Security::$type(base64_decode($value), $this->key));
 				}
 			}
 		}
@@ -519,5 +503,5 @@ class CookieComponent extends Component {
 		}
 		return $array;
 	}
-}
 
+}

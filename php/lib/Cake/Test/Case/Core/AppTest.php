@@ -5,12 +5,12 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Core
  * @since         CakePHP(tm) v 2.0
@@ -30,7 +30,6 @@ class AppTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
 		CakePlugin::unload();
 	}
 
@@ -166,7 +165,7 @@ class AppTest extends CakeTestCase {
 		App::build(array('helpers' => array('/path/to/helpers/')));
 		$expected = array(
 			'/path/to/helpers/',
-			APP . 'View' . DS . 'Helper' . DS
+			APP . 'View' . DS . 'Helper' .DS
 		);
 		$result = App::path('helpers');
 		$this->assertEquals($expected, $result);
@@ -192,19 +191,6 @@ class AppTest extends CakeTestCase {
  * @return void
  */
 	public function testBuildPackage() {
-		$pluginPaths = array(
-			'/foo/bar',
-			APP . 'Plugin' . DS,
-			dirname(dirname(CAKE)) . DS . 'plugins' . DS
-		);
-		App::build(array(
-			'Plugin' => array(
-				'/foo/bar'
-			)
-		));
-		$result = App::path('Plugin');
-		$this->assertEquals($pluginPaths, $result);
-
 		$paths = App::path('Service');
 		$this->assertEquals(array(), $paths);
 
@@ -217,16 +203,11 @@ class AppTest extends CakeTestCase {
 		$expected = array(
 			APP . 'Service' . DS,
 		);
+
 		$result = App::path('Service');
 		$this->assertEquals($expected, $result);
 
-		//Ensure new paths registered for other packages are not affected
-		$result = App::path('Plugin');
-		$this->assertEquals($pluginPaths, $result);
-
-		App::build();
-		$paths = App::path('Service');
-		$this->assertEquals(array(), $paths);
+		App::build(array(), App::REGISTER);
 	}
 
 /**
@@ -347,7 +328,7 @@ class AppTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = App::objects('NonExistingType');
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 
 		App::build(array(
 			'plugins' => array(
@@ -414,9 +395,9 @@ class AppTest extends CakeTestCase {
 		$this->assertTrue(in_array('OtherComponent', $result));
 
 		$result = App::objects('TestPluginTwo.behavior');
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 		$result = App::objects('TestPluginTwo.Model/Behavior');
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 
 		$result = App::objects('model', null, false);
 		$this->assertTrue(in_array('Comment', $result));
@@ -442,11 +423,11 @@ class AppTest extends CakeTestCase {
 
 		$path = App::pluginPath('TestPlugin');
 		$expected = CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS . 'TestPlugin' . DS;
-		$this->assertEquals($expected, $path);
+		$this->assertEquals($path, $expected);
 
 		$path = App::pluginPath('TestPluginTwo');
 		$expected = CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS . 'TestPluginTwo' . DS;
-		$this->assertEquals($expected, $path);
+		$this->assertEquals($path, $expected);
 		App::build();
 	}
 
@@ -461,11 +442,11 @@ class AppTest extends CakeTestCase {
 		));
 		$path = App::themePath('test_theme');
 		$expected = CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS . 'Themed' . DS . 'TestTheme' . DS;
-		$this->assertEquals($expected, $path);
+		$this->assertEquals($path, $expected);
 
 		$path = App::themePath('TestTheme');
 		$expected = CAKE . 'Test' . DS . 'test_app' . DS . 'View' . DS . 'Themed' . DS . 'TestTheme' . DS;
-		$this->assertEquals($expected, $path);
+		$this->assertEquals($path, $expected);
 
 		App::build();
 	}
@@ -599,6 +580,7 @@ class AppTest extends CakeTestCase {
  * @link http://cakephp.lighthouseapp.com/projects/42648/tickets/410
  */
 	public function testImportingHelpersFromAlternatePaths() {
+
 		$this->assertFalse(class_exists('BananaHelper', false), 'BananaHelper exists, cannot test importing it.');
 		App::build(array(
 			'View/Helper' => array(
@@ -618,10 +600,10 @@ class AppTest extends CakeTestCase {
  * @return void
  */
 	public function testFileLoading() {
-		$file = App::import('File', 'RealFile', false, array(), CAKE . 'Config' . DS . 'config.php');
+		$file = App::import('File', 'RealFile', false, array(), CAKE  . 'Config' . DS . 'config.php');
 		$this->assertTrue($file);
 
-		$file = App::import('File', 'NoFile', false, array(), CAKE . 'Config' . DS . 'cake' . DS . 'config.php');
+		$file = App::import('File', 'NoFile', false, array(), CAKE  . 'Config' . DS . 'cake' . DS . 'config.php');
 		$this->assertFalse($file);
 	}
 
@@ -631,21 +613,13 @@ class AppTest extends CakeTestCase {
  * @return void
  */
 	public function testFileLoadingWithArray() {
-		$type = array(
-			'type' => 'File',
-			'name' => 'SomeName',
-			'parent' => false,
-			'file' => CAKE . DS . 'Config' . DS . 'config.php'
-		);
+		$type = array('type' => 'File', 'name' => 'SomeName', 'parent' => false,
+				'file' => CAKE  . DS . 'Config' . DS . 'config.php');
 		$file = App::import($type);
 		$this->assertTrue($file);
 
-		$type = array(
-			'type' => 'File',
-			'name' => 'NoFile',
-			'parent' => false,
-			'file' => CAKE . 'Config' . DS . 'cake' . DS . 'config.php'
-		);
+		$type = array('type' => 'File', 'name' => 'NoFile', 'parent' => false,
+				'file' => CAKE  . 'Config' . DS . 'cake' . DS . 'config.php');
 		$file = App::import($type);
 		$this->assertFalse($file);
 	}
@@ -656,17 +630,13 @@ class AppTest extends CakeTestCase {
  * @return void
  */
 	public function testFileLoadingReturnValue() {
-		$file = App::import('File', 'Name', false, array(), CAKE . 'Config' . DS . 'config.php', true);
+		$file = App::import('File', 'Name', false, array(), CAKE  . 'Config' . DS . 'config.php', true);
 		$this->assertTrue(!empty($file));
 
 		$this->assertTrue(isset($file['Cake.version']));
 
-		$type = array(
-			'type' => 'File',
-			'name' => 'OtherName',
-			'parent' => false,
-			'file' => CAKE . 'Config' . DS . 'config.php', 'return' => true
-		);
+		$type = array('type' => 'File', 'name' => 'OtherName', 'parent' => false,
+				'file' => CAKE  . 'Config' . DS . 'config.php', 'return' => true);
 		$file = App::import($type);
 		$this->assertTrue(!empty($file));
 
@@ -731,6 +701,7 @@ class AppTest extends CakeTestCase {
 
 		$classes = array_flip(get_declared_classes());
 
+
 		$this->assertTrue(isset($classes['PersisterOne']));
 		$this->assertTrue(isset($classes['PersisterTwo']));
 
@@ -738,10 +709,11 @@ class AppTest extends CakeTestCase {
 		$this->assertFalse($load);
 	}
 
+
 	public function testLoadingVendor() {
 		App::build(array(
 			'plugins' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS),
-			'vendors' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Vendor' . DS),
+			'vendors' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Vendor'. DS),
 		), App::RESET);
 		CakePlugin::load(array('TestPlugin', 'TestPluginTwo'));
 
@@ -749,7 +721,7 @@ class AppTest extends CakeTestCase {
 		$result = App::import('Vendor', 'css/TestAsset', array('ext' => 'css'));
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('this is the test asset css file', $text);
+		$this->assertEquals($text, 'this is the test asset css file');
 
 		$result = App::import('Vendor', 'TestPlugin.sample/SamplePlugin');
 		$this->assertTrue($result);
@@ -763,31 +735,31 @@ class AppTest extends CakeTestCase {
 		$result = App::import('Vendor', 'SomeNameInSubfolder', array('file' => 'somename/some.name.php'));
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('This is a file with dot in file name', $text);
+		$this->assertEquals($text, 'This is a file with dot in file name');
 
 		ob_start();
 		$result = App::import('Vendor', 'TestHello', array('file' => 'Test' . DS . 'hello.php'));
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('This is the hello.php file in Test directory', $text);
+		$this->assertEquals($text, 'This is the hello.php file in Test directory');
 
 		ob_start();
 		$result = App::import('Vendor', 'MyTest', array('file' => 'Test' . DS . 'MyTest.php'));
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('This is the MyTest.php file', $text);
+		$this->assertEquals($text, 'This is the MyTest.php file');
 
 		ob_start();
 		$result = App::import('Vendor', 'Welcome');
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('This is the welcome.php file in vendors directory', $text);
+		$this->assertEquals($text, 'This is the welcome.php file in vendors directory');
 
 		ob_start();
 		$result = App::import('Vendor', 'TestPlugin.Welcome');
 		$text = ob_get_clean();
 		$this->assertTrue($result);
-		$this->assertEquals('This is the welcome.php file in test_plugin/vendors directory', $text);
+		$this->assertEquals($text, 'This is the welcome.php file in test_plugin/vendors directory');
 	}
 
 /**

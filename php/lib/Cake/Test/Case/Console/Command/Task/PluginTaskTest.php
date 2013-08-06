@@ -7,12 +7,12 @@
  * PHP 5
  *
  * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc.
+ * Copyright 2005-2011, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command.Task
  * @since         CakePHP v 1.3.0
@@ -50,8 +50,6 @@ class PluginTaskTest extends CakeTestCase {
 			array($this->out, $this->out, $this->in)
 		);
 		$this->Task->path = TMP . 'tests' . DS;
-		$this->Task->bootstrap = TMP . 'tests' . DS . 'bootstrap.php';
-		touch($this->Task->bootstrap);
 
 		$this->_paths = $paths = App::path('plugins');
 		foreach ($paths as $i => $p) {
@@ -61,18 +59,6 @@ class PluginTaskTest extends CakeTestCase {
 		}
 		$this->_testPath = array_push($paths, TMP . 'tests' . DS);
 		App::build(array('plugins' => $paths));
-	}
-
-/**
- * tearDown()
- *
- * @return void
- */
-	public function tearDown() {
-		if (file_exists($this->Task->bootstrap)) {
-			unlink($this->Task->bootstrap);
-		}
-		parent::tearDown();
 	}
 
 /**
@@ -86,7 +72,7 @@ class PluginTaskTest extends CakeTestCase {
 
 		$path = $this->Task->path . 'BakeTestPlugin';
 
-		$file = $path . DS . 'Controller' . DS . 'BakeTestPluginAppController.php';
+		$file = $path . DS . 'Controller' . DS  .'BakeTestPluginAppController.php';
 		$this->Task->expects($this->at(2))->method('createFile')
 			->with($file, new PHPUnit_Framework_Constraint_IsAnything());
 

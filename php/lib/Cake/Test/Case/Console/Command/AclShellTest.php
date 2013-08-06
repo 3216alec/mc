@@ -5,20 +5,18 @@
  * PHP 5
  *
  * CakePHP :  Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc.
+ * Copyright 2005-2011, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command
  * @since         CakePHP v 1.2.0.7726
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('ConsoleOutput', 'Console');
-App::uses('ConsoleInput', 'Console');
 App::uses('ShellDispatcher', 'Console');
 App::uses('Shell', 'Console');
 App::uses('AclShell', 'Console/Command');
@@ -117,10 +115,10 @@ class AclShellTest extends CakeTestCase {
 		$expected = array('model' => 'Model', 'foreign_key' => 'foreignKey');
 
 		$result = $this->Task->parseIdentifier('mySuperUser');
-		$this->assertEquals('mySuperUser', $result);
+		$this->assertEquals($result, 'mySuperUser');
 
 		$result = $this->Task->parseIdentifier('111234');
-		$this->assertEquals('111234', $result);
+		$this->assertEquals($result, '111234');
 	}
 
 /**
@@ -139,9 +137,9 @@ class AclShellTest extends CakeTestCase {
 		$Aro = ClassRegistry::init('Aro');
 		$Aro->cacheQueries = false;
 		$result = $Aro->read();
-		$this->assertEquals('User', $result['Aro']['model']);
-		$this->assertEquals(1, $result['Aro']['foreign_key']);
-		$this->assertEquals(null, $result['Aro']['parent_id']);
+		$this->assertEquals($result['Aro']['model'], 'User');
+		$this->assertEquals($result['Aro']['foreign_key'], 1);
+		$this->assertEquals($result['Aro']['parent_id'], null);
 		$id = $result['Aro']['id'];
 
 		$this->Task->args = array('aro', 'User.1', 'User.3');
@@ -149,19 +147,19 @@ class AclShellTest extends CakeTestCase {
 
 		$Aro = ClassRegistry::init('Aro');
 		$result = $Aro->read();
-		$this->assertEquals('User', $result['Aro']['model']);
-		$this->assertEquals(3, $result['Aro']['foreign_key']);
-		$this->assertEquals($id, $result['Aro']['parent_id']);
+		$this->assertEquals($result['Aro']['model'], 'User');
+		$this->assertEquals($result['Aro']['foreign_key'], 3);
+		$this->assertEquals($result['Aro']['parent_id'], $id);
 
 		$this->Task->args = array('aro', 'root', 'somealias');
 		$this->Task->create();
 
 		$Aro = ClassRegistry::init('Aro');
 		$result = $Aro->read();
-		$this->assertEquals('somealias', $result['Aro']['alias']);
-		$this->assertEquals(null, $result['Aro']['model']);
-		$this->assertEquals(null, $result['Aro']['foreign_key']);
-		$this->assertEquals(null, $result['Aro']['parent_id']);
+		$this->assertEquals($result['Aro']['alias'], 'somealias');
+		$this->assertEquals($result['Aro']['model'], null);
+		$this->assertEquals($result['Aro']['foreign_key'], null);
+		$this->assertEquals($result['Aro']['parent_id'], null);
 	}
 
 /**
@@ -191,7 +189,7 @@ class AclShellTest extends CakeTestCase {
 
 		$Aro = ClassRegistry::init('Aro');
 		$result = $Aro->read(null, 4);
-		$this->assertEquals(null, $result['Aro']['parent_id']);
+		$this->assertEquals($result['Aro']['parent_id'], null);
 	}
 
 /**
@@ -208,7 +206,7 @@ class AclShellTest extends CakeTestCase {
 		$node = $this->Task->Acl->Aro->read(null, $node[0]['Aro']['id']);
 
 		$this->assertFalse(empty($node['Aco'][0]));
-		$this->assertEquals(1, $node['Aco'][0]['Permission']['_create']);
+		$this->assertEquals($node['Aco'][0]['Permission']['_create'], 1);
 	}
 
 /**
@@ -226,7 +224,7 @@ class AclShellTest extends CakeTestCase {
 		$node = $this->Task->Acl->Aro->node(array('model' => 'AuthUser', 'foreign_key' => 2));
 		$node = $this->Task->Acl->Aro->read(null, $node[0]['Aro']['id']);
 		$this->assertFalse(empty($node['Aco'][0]));
-		$this->assertEquals(-1, $node['Aco'][0]['Permission']['_create']);
+		$this->assertEquals($node['Aco'][0]['Permission']['_create'], -1);
 	}
 
 /**
@@ -277,7 +275,7 @@ class AclShellTest extends CakeTestCase {
 		$node = $this->Task->Acl->Aro->node(array('model' => 'AuthUser', 'foreign_key' => 2));
 		$node = $this->Task->Acl->Aro->read(null, $node[0]['Aro']['id']);
 		$this->assertFalse(empty($node['Aco'][0]));
-		$this->assertEquals(0, $node['Aco'][0]['Permission']['_create']);
+		$this->assertEquals($node['Aco'][0]['Permission']['_create'], 0);
 	}
 
 /**

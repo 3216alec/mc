@@ -4,14 +4,14 @@
  *
  * PHP 5
  *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <http://book.cakephp.org/view/1196/Testing>
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://book.cakephp.org/view/1196/Testing CakePHP(tm) Tests
  * @package       Cake.Test.Case.Cache
  * @since         CakePHP(tm) v 1.2.0.5432
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -32,7 +32,6 @@ class CacheTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
-		parent::setUp();
 		$this->_cacheDisable = Configure::read('Cache.disable');
 		Configure::write('Cache.disable', false);
 
@@ -46,7 +45,6 @@ class CacheTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
 		Configure::write('Cache.disable', $this->_cacheDisable);
 		Cache::config('default', $this->_defaultCacheConfig['settings']);
 	}
@@ -59,7 +57,7 @@ class CacheTest extends CakeTestCase {
 	public function testConfig() {
 		$settings = array('engine' => 'File', 'path' => TMP . 'tests', 'prefix' => 'cake_test_');
 		$results = Cache::config('new', $settings);
-		$this->assertEquals(Cache::config('new'), $results);
+		$this->assertEquals($results, Cache::config('new'));
 		$this->assertTrue(isset($results['engine']));
 		$this->assertTrue(isset($results['settings']));
 	}
@@ -95,11 +93,11 @@ class CacheTest extends CakeTestCase {
 
 		$settings = array('engine' => 'TestAppCache', 'path' => TMP, 'prefix' => 'cake_test_');
 		$result = Cache::config('libEngine', $settings);
-		$this->assertEquals(Cache::config('libEngine'), $result);
+		$this->assertEquals($result, Cache::config('libEngine'));
 
 		$settings = array('engine' => 'TestPlugin.TestPluginCache', 'path' => TMP, 'prefix' => 'cake_test_');
 		$result = Cache::config('pluginLibEngine', $settings);
-		$this->assertEquals(Cache::config('pluginLibEngine'), $result);
+		$this->assertEquals($result, Cache::config('pluginLibEngine'));
 
 		Cache::drop('libEngine');
 		Cache::drop('pluginLibEngine');
@@ -127,6 +125,7 @@ class CacheTest extends CakeTestCase {
 		));
 		$read = Cache::read('Test', 'invalid');
 	}
+
 
 /**
  * Test reading from a config that is undefined.
@@ -163,10 +162,10 @@ class CacheTest extends CakeTestCase {
 		$_cacheConfigTests = Cache::config('tests');
 
 		$result = Cache::config('sessions', array('engine' => 'File', 'path' => TMP . 'sessions'));
-		$this->assertEquals(Cache::settings('sessions'), $result['settings']);
+		$this->assertEquals($result['settings'], Cache::settings('sessions'));
 
 		$result = Cache::config('tests', array('engine' => 'File', 'path' => TMP . 'tests'));
-		$this->assertEquals(Cache::settings('tests'), $result['settings']);
+		$this->assertEquals($result['settings'], Cache::settings('tests'));
 
 		Cache::config('sessions', $_cacheConfigSessions['settings']);
 		Cache::config('tests', $_cacheConfigTests['settings']);
@@ -182,17 +181,17 @@ class CacheTest extends CakeTestCase {
 
 		Cache::write('value_one', 'I am cached', 'test_name');
 		$result = Cache::read('value_one', 'test_name');
-		$this->assertEquals('I am cached', $result);
+		$this->assertEquals($result, 'I am cached');
 
 		$result = Cache::read('value_one');
-		$this->assertEquals(null, $result);
+		$this->assertEquals($result, null);
 
 		Cache::write('value_one', 'I am in default config!');
 		$result = Cache::read('value_one');
-		$this->assertEquals('I am in default config!', $result);
+		$this->assertEquals($result, 'I am in default config!');
 
 		$result = Cache::read('value_one', 'test_name');
-		$this->assertEquals('I am cached', $result);
+		$this->assertEquals($result, 'I am cached');
 
 		Cache::delete('value_one', 'test_name');
 		Cache::delete('value_one', 'default');
@@ -217,8 +216,7 @@ class CacheTest extends CakeTestCase {
 			'probability' => 100,
 			'engine' => 'File',
 			'isWindows' => DIRECTORY_SEPARATOR == '\\',
-			'mask' => 0664,
-			'groups' => array()
+			'mask' => 0664
 		);
 		$this->assertEquals($expected, Cache::settings('sessions'));
 
@@ -387,7 +385,7 @@ class CacheTest extends CakeTestCase {
 
 		Cache::set(array('duration' => '+1 year'));
 		$data = Cache::read('test_cache');
-		$this->assertEquals('this is just a simple test of the cache system', $data);
+		$this->assertEquals($data, 'this is just a simple test of the cache system');
 
 		Cache::delete('test_cache');
 

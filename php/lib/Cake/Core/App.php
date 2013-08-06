@@ -5,12 +5,12 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Core
  * @since         CakePHP(tm) v 1.2.0.6001
@@ -263,13 +263,10 @@ class App {
  *
  * `App::build(array('View/Helper' => array('/path/to/helpers/', '/another/path/'))); will setup multiple search paths for helpers`
  *
- * `App::build(array('Service' => array('%s' . 'Service' . DS)), App::REGISTER); will register new package 'Service'`
- *
  * If reset is set to true, all loaded plugins will be forgotten and they will be needed to be loaded again.
  *
  * @param array $paths associative array with package names as keys and a list of directories for new search paths
- * @param boolean|string $mode App::RESET will set paths, App::APPEND with append paths, App::PREPEND will prepend paths (default)
- * 	App::REGISTER will register new packages and their paths, %s in path will be replaced by APP path
+ * @param mixed $mode App::RESET will set paths, App::APPEND with append paths, App::PREPEND will prepend paths, [default] App::PREPEND
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#App::build
  */
@@ -292,22 +289,24 @@ class App {
 			return;
 		}
 
-		if (empty($paths)) {
-			self::$_packageFormat = null;
-		}
-
 		$packageFormat = self::_packageFormat();
 
 		if ($mode === App::REGISTER) {
-			foreach ($paths as $package => $formats) {
-				if (empty($packageFormat[$package])) {
-					$packageFormat[$package] = $formats;
-				} else {
-					$formats = array_merge($packageFormat[$package], $formats);
+			if (empty($paths)) {
+				self::$_packageFormat = null;
+				$packageFormat = self::_packageFormat();
+			} else {
+				foreach ($paths as $package => $formats) {
+					if (!empty($packageFormat[$package])) {
+						$formats = array_merge($packageFormat[$package], $formats);
+					}
+
 					$packageFormat[$package] = array_values(array_unique($formats));
 				}
+
+				self::$_packageFormat = $packageFormat;
+				$paths = array();
 			}
-			self::$_packageFormat = $packageFormat;
 		}
 
 		$defaults = array();
@@ -322,15 +321,9 @@ class App {
 			return;
 		}
 
-		if ($mode === App::REGISTER) {
-			$paths = array();
-		}
-
 		foreach ($defaults as $type => $default) {
 			if (!empty(self::$_packages[$type])) {
 				$path = self::$_packages[$type];
-			} else {
-				$path = $default;
 			}
 
 			if (!empty($paths[$type])) {
@@ -418,7 +411,7 @@ class App {
  * are commonly used by version control systems.
  *
  * @param string $type Type of object, i.e. 'Model', 'Controller', 'View/Helper', 'file', 'class' or 'plugin'
- * @param string|array $path Optional Scan only the path given. If null, paths for the chosen type will be used.
+ * @param mixed $path Optional Scan only the path given. If null, paths for the chosen type will be used.
  * @param boolean $cache Set to false to rescan objects of the chosen type. Defaults to true.
  * @return mixed Either false on incorrect / miss.  Or an array of found objects.
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#App::objects
@@ -533,12 +526,12 @@ class App {
 			return false;
 		}
 
-		$parts = explode('.', self::$_classMap[$className], 2);
-		list($plugin, $package) = count($parts) > 1 ? $parts : array(null, current($parts));
-
-		if ($file = self::_mapped($className, $plugin)) {
+		if ($file = self::_mapped($className)) {
 			return include $file;
 		}
+
+		$parts = explode('.', self::$_classMap[$className], 2);
+		list($plugin, $package) = count($parts) > 1 ? $parts : array(null, current($parts));
 		$paths = self::path($package, $plugin);
 
 		if (empty($plugin)) {
@@ -551,12 +544,10 @@ class App {
 			$paths[] = $pluginPath . 'Lib' . DS . $package . DS;
 			$paths[] = $pluginPath . $package . DS;
 		}
-
-		$normalizedClassName = str_replace('\\', DS, $className);
 		foreach ($paths as $path) {
-			$file = $path . $normalizedClassName . '.php';
+			$file = $path . $className . '.php';
 			if (file_exists($file)) {
-				self::_map($file, $className, $plugin);
+				self::_map($file, $className);
 				return include $file;
 			}
 		}
@@ -583,10 +574,10 @@ class App {
  * not construct any classes contained in the files. It will only find and require() the file.
  *
  * @link          http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#including-files-with-app-import
- * @param string|array $type The type of Class if passed as a string, or all params can be passed as
+ * @param mixed $type The type of Class if passed as a string, or all params can be passed as
  *                    an single array to $type,
  * @param string $name Name of the Class or a unique name for the file
- * @param boolean|array $parent boolean true if Class Parent should be searched, accepts key => value
+ * @param mixed $parent boolean true if Class Parent should be searched, accepts key => value
  *              array('parent' => $parent ,'file' => $file, 'search' => $search, 'ext' => '$ext');
  *              $ext allows setting the extension of the file name
  *              based on Inflector::underscore($name) . ".$ext";
@@ -780,15 +771,10 @@ class App {
  * @return void
  */
 	protected static function _map($file, $name, $plugin = null) {
-		$key = $name;
 		if ($plugin) {
-			$key = 'plugin.' . $name;
-		}
-		if ($plugin && empty(self::$_map[$name])) {
-			self::$_map[$key] = $file;
-		}
-		if (!$plugin && empty(self::$_map['plugin.' . $name])) {
-			self::$_map[$key] = $file;
+			self::$_map['Plugin'][$plugin][$name] = $file;
+		} else {
+			self::$_map[$name] = $file;
 		}
 		if (!self::$bootstrapping) {
 			self::$_cacheChange = true;
@@ -803,11 +789,17 @@ class App {
  * @return mixed file path if found, false otherwise
  */
 	protected static function _mapped($name, $plugin = null) {
-		$key = $name;
 		if ($plugin) {
-			$key = 'plugin.' . $name;
+			if (isset(self::$_map['Plugin'][$plugin][$name])) {
+				return self::$_map['Plugin'][$plugin][$name];
+			}
+			return false;
 		}
-		return isset(self::$_map[$key]) ? self::$_map[$key] : false;
+
+		if (isset(self::$_map[$name])) {
+			return self::$_map[$name];
+		}
+		return false;
 	}
 
 /**
@@ -883,8 +875,7 @@ class App {
 /**
  * Object destructor.
  *
- * Writes cache file if changes have been made to the $_map. Also, check if a fatal
- * error happened and call the handler.
+ * Writes cache file if changes have been made to the $_map
  *
  * @return void
  */
@@ -895,35 +886,6 @@ class App {
 		if (self::$_objectCacheChange) {
 			Cache::write('object_map', self::$_objects, '_cake_core_');
 		}
-
-		self::_checkFatalError();
-	}
-
-/**
- * Check if a fatal error happened and trigger the configured handler if configured
- *
- * @return void
- */
-	protected static function _checkFatalError() {
-		$lastError = error_get_last();
-		if (!is_array($lastError)) {
-			return;
-		}
-
-		list(, $log) = ErrorHandler::mapErrorCode($lastError['type']);
-		if ($log !== LOG_ERR) {
-			return;
-		}
-
-		if (PHP_SAPI === 'cli') {
-			$errorHandler = Configure::read('Error.consoleHandler');
-		} else {
-			$errorHandler = Configure::read('Error.handler');
-		}
-		if (!is_callable($errorHandler)) {
-			return;
-		}
-		call_user_func($errorHandler, $lastError['type'], $lastError['message'], $lastError['file'], $lastError['line'], array());
 	}
 
 }

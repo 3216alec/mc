@@ -5,20 +5,18 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Console.Command.Task
  * @since         CakePHP(tm) v 1.3
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('ConsoleOutput', 'Console');
-App::uses('ConsoleInput', 'Console');
 App::uses('ShellDispatcher', 'Console');
 App::uses('Shell', 'Console');
 App::uses('CakeSchema', 'Model');
@@ -40,13 +38,9 @@ if (!$imported) {
 	define('ARTICLE_MODEL_CREATED', true);
 
 	class BakeArticle extends Model {
-
 		public $name = 'BakeArticle';
-
 		public $hasMany = array('BakeComment');
-
 		public $hasAndBelongsToMany = array('BakeTag');
-
 	}
 }
 
@@ -181,7 +175,7 @@ class ControllerTaskTest extends CakeTestCase {
 	public function testDoHelpersNo() {
 		$this->Task->expects($this->any())->method('in')->will($this->returnValue('n'));
 		$result = $this->Task->doHelpers();
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 	}
 
 /**
@@ -218,7 +212,7 @@ class ControllerTaskTest extends CakeTestCase {
 	public function testDoComponentsNo() {
 		$this->Task->expects($this->any())->method('in')->will($this->returnValue('n'));
 		$result = $this->Task->doComponents();
-		$this->assertEquals(array(), $result);
+		$this->assertEquals($result, array());
 	}
 
 /**
@@ -309,7 +303,7 @@ class ControllerTaskTest extends CakeTestCase {
 		$this->Task->plugin = 'ControllerTest';
 
 		//fake plugin path
-		CakePlugin::load('ControllerTest', array('path' => APP . 'Plugin' . DS . 'ControllerTest' . DS));
+		CakePlugin::load('ControllerTest', array('path' =>  APP . 'Plugin' . DS . 'ControllerTest' . DS));
 		$path = APP . 'Plugin' . DS . 'ControllerTest' . DS . 'Controller' . DS . 'ArticlesController.php';
 
 		$this->Task->expects($this->at(1))->method('createFile')->with(
@@ -557,7 +551,7 @@ class ControllerTaskTest extends CakeTestCase {
  *
  * @return void
  */
-	public static function nameVariations() {
+	static function nameVariations() {
 		return array(
 			array('BakeArticles'), array('BakeArticle'), array('bake_article'), array('bake_articles')
 		);

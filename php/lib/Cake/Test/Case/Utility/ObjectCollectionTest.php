@@ -5,13 +5,13 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://book.cakephp.org/view/1196/Testing CakePHP(tm) Tests
  * @package       Cake.Test.Case.Utility
  * @since         CakePHP(tm) v 2.0
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -24,7 +24,6 @@ App::uses('CakeEvent', 'Event');
  * A generic object class
  */
 class GenericObject {
-
 /**
  * Constructor
  *
@@ -35,40 +34,33 @@ class GenericObject {
 		$this->_Collection = $collection;
 		$this->settings = $settings;
 	}
-
 }
 
 /**
  * First Extension of Generic Object
  */
 class FirstGenericObject extends GenericObject {
-
 /**
  * A generic callback
  */
 	public function callback() {
 	}
-
 }
 
 /**
  * Second Extension of Generic Object
  */
 class SecondGenericObject extends GenericObject {
-
 	public function callback() {
 	}
-
 }
 
 /**
  * Third Extension of Generic Object
  */
 class ThirdGenericObject extends GenericObject {
-
 	public function callback() {
 	}
-
 }
 
 /**
@@ -96,11 +88,9 @@ class GenericObjectCollection extends ObjectCollection {
 		}
 		return $this->_loaded[$name];
 	}
-
 }
 
 class ObjectCollectionTest extends CakeTestCase {
-
 /**
  * setUp
  *
@@ -117,8 +107,8 @@ class ObjectCollectionTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
 		unset($this->Objects);
+		parent::tearDown();
 	}
 
 /**
@@ -180,7 +170,7 @@ class ObjectCollectionTest extends CakeTestCase {
 		$result = $this->Objects->set('Second', new SecondGenericObject($this->Objects));
 		$this->assertInstanceOf('SecondGenericObject', $result['Second'], 'set failed');
 
-		$this->assertEquals(2, count($result));
+		$this->assertEquals(count($result), 2);
 	}
 
 /**
@@ -535,7 +525,7 @@ class ObjectCollectionTest extends CakeTestCase {
 		$result = ObjectCollection::normalizeObjectArray($components);
 		$this->assertEquals($expected, $result);
 	}
-
+	
 /**
  * tests that passing an instance of CakeEvent to trigger will prepend the subject to the list of arguments
  *
@@ -591,5 +581,4 @@ class ObjectCollectionTest extends CakeTestCase {
 		$event->omitSubject = true;
 		$this->assertTrue($this->Objects->trigger($event));
 	}
-
 }

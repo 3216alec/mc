@@ -10,19 +10,19 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Model.Datasource
  * @since         CakePHP(tm) v .0.10.0.1222
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Hash', 'Utility');
+App::uses('Set', 'Utility');
 App::uses('Security', 'Utility');
 
 /**
@@ -122,7 +122,7 @@ class CakeSession {
 	public static $requestCountdown = 10;
 
 /**
- * Pseudo constructor.
+ * Constructor.
  *
  * @param string $base The base path for the Session
  * @return void
@@ -136,8 +136,6 @@ class CakeSession {
 		}
 		self::_setPath($base);
 		self::_setHost(env('HTTP_HOST'));
-
-		register_shutdown_function('session_write_close');
 	}
 
 /**
@@ -182,7 +180,7 @@ class CakeSession {
 		if (self::started()) {
 			return true;
 		}
-		self::init();
+		CakeSession::init();
 		$id = self::id();
 		session_write_close();
 		self::_configureSession();
@@ -218,7 +216,7 @@ class CakeSession {
 		if (empty($name)) {
 			return false;
 		}
-		$result = Hash::get($_SESSION, $name);
+		$result = Set::classicExtract($_SESSION, $name);
 		return isset($result);
 	}
 
@@ -247,7 +245,7 @@ class CakeSession {
  */
 	public static function delete($name) {
 		if (self::check($name)) {
-			self::_overwrite($_SESSION, Hash::remove($_SESSION, $name));
+			self::_overwrite($_SESSION, Set::remove($_SESSION, $name));
 			return (self::check($name) == false);
 		}
 		self::_setError(2, __d('cake_dev', "%s doesn't exist", $name));
@@ -353,7 +351,7 @@ class CakeSession {
 /**
  * Returns given session variable, or all of them, if no parameters given.
  *
- * @param string|array $name The name of the session variable (or a path as sent to Set.extract)
+ * @param mixed $name The name of the session variable (or a path as sent to Set.extract)
  * @return mixed The value of the session variable
  */
 	public static function read($name = null) {
@@ -366,9 +364,9 @@ class CakeSession {
 		if (empty($name)) {
 			return false;
 		}
-		$result = Hash::get($_SESSION, $name);
+		$result = Set::classicExtract($_SESSION, $name);
 
-		if (isset($result)) {
+		if (!is_null($result)) {
 			return $result;
 		}
 		self::_setError(2, "$name doesn't exist");
@@ -391,7 +389,7 @@ class CakeSession {
 /**
  * Writes value to given session variable name.
  *
- * @param string|array $name Name of variable
+ * @param mixed $name Name of variable
  * @param string $value Value to write
  * @return boolean True if the write was successful, false if the write failed
  */
@@ -407,8 +405,8 @@ class CakeSession {
 			$write = array($name => $value);
 		}
 		foreach ($write as $key => $val) {
-			self::_overwrite($_SESSION, Hash::insert($_SESSION, $key, $val));
-			if (Hash::get($_SESSION, $key) !== $val) {
+			self::_overwrite($_SESSION, Set::insert($_SESSION, $key, $val));
+			if (Set::classicExtract($_SESSION, $key) !== $val) {
 				return false;
 			}
 		}
@@ -454,7 +452,7 @@ class CakeSession {
 		if (isset($sessionConfig['defaults'])) {
 			$defaults = self::_defaultConfig($sessionConfig['defaults']);
 			if ($defaults) {
-				$sessionConfig = Hash::merge($defaults, $sessionConfig);
+				$sessionConfig = Set::merge($defaults, $sessionConfig);
 			}
 		}
 		if (!isset($sessionConfig['ini']['session.cookie_secure']) && env('HTTPS')) {
@@ -471,12 +469,6 @@ class CakeSession {
 		}
 		if (!empty($sessionConfig['handler'])) {
 			$sessionConfig['ini']['session.save_handler'] = 'user';
-		}
-		if (!isset($sessionConfig['ini']['session.gc_maxlifetime'])) {
-			$sessionConfig['ini']['session.gc_maxlifetime'] = $sessionConfig['timeout'] * 60;
-		}
-		if (!isset($sessionConfig['ini']['session.cookie_httponly'])) {
-			$sessionConfig['ini']['session.cookie_httponly'] = 1;
 		}
 
 		if (empty($_SESSION)) {
@@ -540,6 +532,7 @@ class CakeSession {
 			'php' => array(
 				'cookie' => 'CAKEPHP',
 				'timeout' => 240,
+				'cookieTimeout' => 240,
 				'ini' => array(
 					'session.use_trans_sid' => 0,
 					'session.cookie_path' => self::$path
@@ -548,6 +541,7 @@ class CakeSession {
 			'cake' => array(
 				'cookie' => 'CAKEPHP',
 				'timeout' => 240,
+				'cookieTimeout' => 240,
 				'ini' => array(
 					'session.use_trans_sid' => 0,
 					'url_rewriter.tags' => '',
@@ -562,6 +556,7 @@ class CakeSession {
 			'cache' => array(
 				'cookie' => 'CAKEPHP',
 				'timeout' => 240,
+				'cookieTimeout' => 240,
 				'ini' => array(
 					'session.use_trans_sid' => 0,
 					'url_rewriter.tags' => '',
@@ -578,6 +573,7 @@ class CakeSession {
 			'database' => array(
 				'cookie' => 'CAKEPHP',
 				'timeout' => 240,
+				'cookieTimeout' => 240,
 				'ini' => array(
 					'session.use_trans_sid' => 0,
 					'url_rewriter.tags' => '',
@@ -609,9 +605,11 @@ class CakeSession {
 			if (empty($_SESSION)) {
 				$_SESSION = array();
 			}
+		} elseif (!isset($_SESSION)) {
+			session_cache_limiter ("must-revalidate");
+			session_start();
+			header ('P3P: CP="NOI ADM DEV PSAi COM NAV OUR OTRo STP IND DEM"');
 		} else {
-			// For IE<=8
-			session_cache_limiter("must-revalidate");
 			session_start();
 		}
 		return true;
@@ -684,5 +682,4 @@ class CakeSession {
 		self::$error[$errorNumber] = $errorMessage;
 		self::$lastError = $errorNumber;
 	}
-
 }

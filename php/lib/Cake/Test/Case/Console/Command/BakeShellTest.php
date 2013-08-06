@@ -6,20 +6,18 @@
  * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Console.Command
  * @since         CakePHP(tm) v 1.3
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('ConsoleOutput', 'Console');
-App::uses('ConsoleInput', 'Console');
 App::uses('ShellDispatcher', 'Console');
 App::uses('Shell', 'Console');
 App::uses('BakeShell', 'Console/Command');
@@ -30,9 +28,7 @@ App::uses('Controller', 'Controller');
 
 if (!class_exists('UsersController')) {
 	class UsersController extends Controller {
-
 		public $name = 'Users';
-
 	}
 }
 
@@ -93,7 +89,7 @@ class BakeShellTest extends CakeTestCase {
 
 		$this->Shell->Model->expects($this->never())
 			->method('getName');
-
+	
 		$this->Shell->Model->expects($this->once())
 			->method('bake')
 			->will($this->returnValue(true));
@@ -101,7 +97,7 @@ class BakeShellTest extends CakeTestCase {
 		$this->Shell->Controller->expects($this->once())
 			->method('bake')
 			->will($this->returnValue(true));
-
+	
 		$this->Shell->View->expects($this->once())
 			->method('execute');
 
