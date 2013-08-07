@@ -1,1 +1,13 @@
+<<<<<<< HEAD
 .project
+=======
+/app/Config
+/app/tmp
+/lib/Cake/Console/Templates/skel/tmp/
+/plugins
+/vendors
+/build
+/dist
+.DS_Store
+tags
+>>>>>>> 5250672c74c6220f701eb979d4233b9ee8fab451
